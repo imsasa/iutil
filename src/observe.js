@@ -1,4 +1,5 @@
 // const allObserveable = new WeakMap();
+import Evt from '../evt.js'
 const allObservable = {
     objs:new WeakMap(),
     get:function (k){
