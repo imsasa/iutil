@@ -1,6 +1,7 @@
 
 // 判断是否支持EventTarget, 线上发现iOS13.6的部分微信版本不支持
-let evts = new WeakMap();
+const evts = new WeakMap();
+const fns  = new WeakMap();
 if (typeof EventTarget === 'undefined') {
     /**
      * @author evan
@@ -22,6 +23,7 @@ if (typeof EventTarget === 'undefined') {
         addEventListener(name, cb, opts = {}) {
             let listener = listeners.get(this);
             listener[name] || (listener[name] = []);
+            if (listener[name].indexOf(fn) !== -1) return this;
             let _cb = opts['once'] ? (e) => {
                 this.removeEventListener(name, _cb);
                 cb(e);
@@ -75,7 +77,12 @@ Evt.prototype = {
      * @returns {Evt}
      */
     on(name, cb) {
-        evts.get(this).addEventListener(name, e => cb(e.detail, e));
+        let fn =fns.get(cb);
+        if(!fns.get(cb)){
+            fns.set(cb, e => cb(e.detail, e) );
+            fn = fns.get(cb);
+        }
+        evts.get(this).addEventListener(name, fn);
         return this;
     },
     /**
@@ -95,7 +102,8 @@ Evt.prototype = {
      * @returns {Evt}
      */
     off(name, cb) {
-        evts.get(this).removeEventListener(name, cb);
+        let fn =fns.get(cb);
+        fn && evts.get(this).removeEventListener(name, fn);
         return this;
     },
     /**
@@ -110,7 +118,7 @@ Evt.prototype = {
     },
 };
 
-// export default Evt;
+export default Evt;
 
 // demo
 // let evt = new Evt();
@@ -118,5 +126,6 @@ Evt.prototype = {
 // let fn=function (){
 //     console.log('yes')
 // }
+// evt.on(k,fn);
 // evt.on(k,fn);
 // evt.emit(k,'a');

@@ -1,47 +1,49 @@
-// const allObserveable = new WeakMap();
 import Evt from './evt.js';
 const observables = new WeakMap();
-const allObservable = {
-    objs:new WeakMap(),
-    get:function (k){
-        let evt = observables.get(k);
-        if (!evt) {
-            evt=new Evt();
-            observables.set(k, evt);
-        }
-        return evt;
-    }
-}
-
-function defineProp(obj, k) {
-    let observable = allObservable.get(obj);
+function defineProp(obj, k, evt) {
     let val = obj[k];
     Object.defineProperty(obj, k, {
         get: () => val,
         set: function (v) {
             val = v;
-            let evt = observable[obj];
-            evt.emit(k, [v, k]);
+            evt?.emit('change', [v, k]);
         },
     });
-    observable.keys.add(k);
 }
 
-export function observe(obj, k, fn) {
-    let keys;
-    if (arguments.length === 2) {
-        keys = Object.keys(obj);
-        fn = k;
-    } else {
-        keys = [k];
+export function observe(obj, fn, deep) {
+    let cache = observables.get(obj);
+    if (!cache?.evt) {
+        const fns = new WeakMap();
+        let evt = new Evt();
+        cache = {evt, fns};
+        observables.set(obj, cache);
+        let keys = Object.keys(obj);
+        keys.forEach(k => {
+            defineProp(obj, k, evt);
+            if (deep && typeof obj[k] === 'object') {
+                observe(obj[k], fn, k);
+            }
+        });
     }
-    let evt = allObservable.get(obj);
-    keys.forEach((k) => {
-        defineProp(obj, k, fn);
-    });
-    evt.on(k,fn);
+    if(cache.fns.get(fn)){
+        return ;
+    }
+    const {evt, fns} = observables.get(obj);
+    let _ = typeof deep === 'string' ? arg => fn(arg[0], `${deep}.${arg[1]}`, obj) : arg => fn(arg[0], arg[1], obj);
+    fns.set(fn, _);
+    evt.on('change', _);
     return function unobserve() {
-        keys.forEach((k) => observable.evt.off(k, fn));
-        observable = null;
+        evt.off('change', _);
     };
 }
+
+// demo
+// let obj={name:'sasa',age:30, sub:{n:'n'}};
+// observe(obj,(arg,key)=>{
+//     console.log(arg);
+// },true)
+// observe(obj.sub,(arg,key)=>{
+//     console.log(arg);
+// },true)
+// obj.sub.n='evan';
