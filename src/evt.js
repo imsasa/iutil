@@ -110,4 +110,13 @@ Evt.prototype = {
     },
 };
 
-export default Evt;
+// export default Evt;
+
+// demo
+// let evt = new Evt();
+// let k='foo';
+// let fn=function (){
+//     console.log('yes')
+// }
+// evt.on(k,fn);
+// evt.emit(k,'a');

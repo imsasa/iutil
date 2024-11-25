@@ -1,22 +1,20 @@
 // const allObserveable = new WeakMap();
-import Evt from '../evt.js'
+import Evt from './evt.js';
+const observables = new WeakMap();
 const allObservable = {
     objs:new WeakMap(),
     get:function (k){
-        let observable = this.objs.get(k);
-        if( !observable){
-            this.objs.set(k,{evt:new Evt(), keys:new Set()});
-            observable = this.objs.get(k);
+        let evt = observables.get(k);
+        if (!evt) {
+            evt=new Evt();
+            observables.set(k, evt);
         }
-        return observable;
+        return evt;
     }
 }
 
 function defineProp(obj, k) {
     let observable = allObservable.get(obj);
-    if (observable.keys.has(k)) {
-        return ;
-    }
     let val = obj[k];
     Object.defineProperty(obj, k, {
         get: () => val,
@@ -37,11 +35,11 @@ export function observe(obj, k, fn) {
     } else {
         keys = [k];
     }
-    let observable = allObservable.get(k);
+    let evt = allObservable.get(obj);
     keys.forEach((k) => {
         defineProp(obj, k, fn);
     });
-    observable.evt.on(k,fn);
+    evt.on(k,fn);
     return function unobserve() {
         keys.forEach((k) => observable.evt.off(k, fn));
         observable = null;
