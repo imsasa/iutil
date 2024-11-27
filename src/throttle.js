@@ -70,7 +70,7 @@ function _throttle_(fn, opt = 1000, mode) {
 }
 
 /**
- *
+ * 限制函数在一定时间间隔内只能执行一次。
  * @param fn
  * @param {object} [opt]
  * @returns {Function}
@@ -80,16 +80,18 @@ export function throttle(fn, opt) {
 }
 
 /**
- *
+ * 在一定时间间隔内，如果函数被多次调用，只执行最后一次调用。
  * @param fn
  * @param {object} [opt]
  * @returns {Function}
  */
 export function debounce(fn, opt) {
-  console.log("debounce");
   if (typeof opt === "number" || !opt) {
     opt = {delay: opt || 1000};
   }
   if (opt.immediate === undefined) opt.immediate = false;
   return _throttle_(fn, opt, 1);
 }
+
+
+
