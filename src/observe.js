@@ -12,7 +12,7 @@ function defineProp(obj, k, evt) {
     });
 }
 
-export function observe(obj, fn, deep) {
+export default function observe(obj, fn, deep) {
     let cache = observables.get(obj);
     let uns=[];
     if (!cache?.evt) {
@@ -30,7 +30,9 @@ export function observe(obj, fn, deep) {
     }
     if(cache.fns.get(fn)) return ;
     const {evt, fns} = observables.get(obj);
-    let _ = typeof deep === 'string' ? arg => fn(arg[0], `${deep}.${arg[1]}`, obj) : arg => fn(arg[0], arg[1], obj);
+    let _ = typeof deep === 'string' ? arg => {
+        fn(arg[0], `${deep}.${arg[1]}`, obj)
+    } : arg => fn(arg[0], arg[1], obj);
     fns.set(fn, _);
     evt.on('change', _);
     return function unobserve() {
@@ -41,10 +43,10 @@ export function observe(obj, fn, deep) {
 
 // demo
 // let obj={name:'sasa',age:30, sub:{n:'n'}};
+// // observe(obj,(arg,key)=>{
+// //     console.log(arg);
+// // },true)
 // observe(obj,(arg,key)=>{
-//     console.log(arg);
-// },true)
-// observe(obj.sub,(arg,key)=>{
 //     console.log(arg);
 // },true)
 // obj.sub.n='evan';
