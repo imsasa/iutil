@@ -23,7 +23,7 @@ if (typeof EventTarget === 'undefined') {
         addEventListener(name, cb, opts = {}) {
             let listener = listeners.get(this);
             listener[name] || (listener[name] = []);
-            if (listener[name].indexOf(fn) !== -1) return this;
+            if (listener[name].indexOf(cb) !== -1) return this;
             let _cb = opts['once'] ? (e) => {
                 this.removeEventListener(name, _cb);
                 cb(e);
@@ -77,12 +77,10 @@ Evt.prototype = {
      * @returns {Evt}
      */
     on(name, cb) {
-        let fn =fns.get(cb);
         if(!fns.get(cb)){
             fns.set(cb, e => cb(e.detail, e) );
-            fn = fns.get(cb);
+            evts.get(this).addEventListener(name, fns.get(cb));
         }
-        evts.get(this).addEventListener(name, fn);
         return this;
     },
     /**
